@@ -1,0 +1,21 @@
+{
+  "port": 8002,
+  "protocol": "https",
+  "timeout": 50000,
+  "host": "",
+  "auth": {
+    "user": "",
+    "pass": "",
+    "sendImmediately": false
+  },
+  "headers": {
+    "Accept": "application/json"
+  },
+  "format": "json",
+  "channelName": "#marklogic-stats",
+  "groupName": "ML-STATISTICS",
+  "groupId": "Default",
+  "period": "raw",
+  "webhook": "https://hooks.slack.com/services/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",
+  "appServers": ["nbc-park", "nbc-snl-node"]
+}

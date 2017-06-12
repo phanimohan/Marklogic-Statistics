@@ -1,0 +1,18 @@
+{
+  "port": 8002,
+  "timeout": 50000,
+  "protocol": "https",
+  "host": "prod-ml.snlml.com",
+  "auth":  {
+    "user": "prodml",
+    "pass": "Ca02bKbfTu5ERGM0X0nZ"
+  },
+  "headers": {
+    "Accept": "application/json"
+  },
+  "format": "json",
+  "channelName": "#marklogic-stats",
+  "groupName": "ML-STATISTICS",
+  "groupId": "Default",
+  "period": "raw"
+}

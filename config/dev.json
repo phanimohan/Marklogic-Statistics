@@ -1,0 +1,7 @@
+{
+  "host": "dev-ml.snlml.com",
+  "auth": {
+    "user": "devml",
+    "pass": ""
+  }
+}

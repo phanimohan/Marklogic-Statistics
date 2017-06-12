@@ -1,0 +1,45 @@
+{
+  "name": "mlstats",
+  "version": "1.0.0",
+  "description": "Marklogic Statistics for slack channel",
+  "main": "slackApp.js",
+  "scripts": {
+    "lint": "eslint .",
+    "coverage": "istanbul check-coverage --statements 100 --lines 100 --branches 100 --functions 100",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "krishnachaitanya.swamy@nbcuni.com",
+  "license": "ISC",
+  "contributors": [
+    {
+      "name": "Chaitanya",
+      "email": "krishnachaitanya.swamy@cognizant.com",
+      "url": "http://www.cognizant.com"
+    }
+  ],
+  "dependencies": {
+    "config": "1.17.0",
+    "fs": "0.0.1-security",
+    "lodash": "^4.13.1",
+    "moment-timezone": "^0.5.10",
+    "node-regexp": "^0.1.1",
+    "promise-results": "^0.6.2",
+    "request": "^2.75.0",
+    "request-promise": "^4.1.1",
+    "slack-node": "^0.1.8",
+    "timer-jobs": "^0.1.0",
+    "underscore": "^1.8.3"
+  },
+  "devDependencies": {
+    "eslint": "^3.18.0",
+    "eslint-config-airbnb-base": "^7.2.0",
+    "eslint-plugin-import": "^1.15.0",
+    "ghooks": "^1.2.1",
+    "istanbul": "^0.4.3",
+    "nodeunit": "^0.10.2",
+    "sinon": "^1.17.2"
+  },
+  "engines": {
+    "node": ">=6.6"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "host": "prod-ml.snlml.com",
+  "auth": {
+    "user": "prodml",
+    "pass": ""
+  }
+}
