@@ -1,6 +1,7 @@
 'use strict';
 
 const SlackConfig = require('./slackConfig');
+const postMLStats = require('./postStats');
 const config = require('config');
 
 const slackInst = new SlackConfig();
@@ -19,8 +20,8 @@ class SlackApp {
     */
   mlStatistics() {
     return slackInst.getCPUMemoryStats()
-                    .then(cpuMemUsage => slackInst.getMLAppServerStats(appServers, cpuMemUsage))
-                    .then(() => slackInst.postMLStats())
+                    .then(() => slackInst.getMLAppServerStats(appServers))
+                    .then(() => postMLStats(slackInst.getFinalStats()))
                     .catch(e => Promise.reject(`Error in ML statistics Code ${e}`));
   }
 }

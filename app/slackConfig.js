@@ -1,9 +1,9 @@
 'use strict';
 
-const Slack = require('slack-node');
 const config = require('config');
 const configuration = require('./configuration');
 const moment = require('moment-timezone');
+const _ = require('lodash');
 
 /**
  * The Slack config application class will fetch all marklogic statistics
@@ -19,10 +19,8 @@ class SlackConfig extends configuration {
    */
   constructor() {
     super();
-    this.slack = new Slack();
-    this.slack.setWebhook(config.get('webhook'));
+    this.stats = {};
     this.groupId = config.get('groupId');
-    this.appServerRequestRate = {};
     this.period = config.get('period');
   }
 
@@ -40,7 +38,6 @@ class SlackConfig extends configuration {
     hosts.forEach((host) => {
       result[host.idref] = host.nameref;
     });
-
     return result;
   }
 
@@ -50,15 +47,13 @@ class SlackConfig extends configuration {
    * @return {string}
    *  Returns the string.
    */
-  getfinalStats() {
-    const appReqRate = this.appServerRequestRate;
+  getFinalStats() {
     const textValue =
-    `NBCU SUPPORT L1: \n` +
-    `Data for Marklogic(PST) @ ${appReqRate.usage.pstTime} \n` +
-    `CPU - User (in %): \t ${appReqRate.usage.cpuUsage} \n` +
-    `Memory - RSS (in MB): \t ${appReqRate.usage.memUsage} \n` +
-    `AppServer (nbc-park) request Rate: \t ${appReqRate['nbc-park']} requests/sec \n` +
-    `AppServer (nbc-snl-node) request Rate: \t ${appReqRate['nbc-snl-node']} requests/sec \n`;
+    `*Data for Marklogic*: ${this.stats.displayTime} PST \n` +
+    `*CPU - User*: ${this.stats.cpuUserUsage} %\n` +
+    `*Memory - RSS*: ${this.stats.memUsage} GB\n` +
+    `*AppServer (nbc-park) request Rate*: ${this.stats['nbc-park']} requests/sec \n` +
+    `*AppServer (nbc-snl-node) request Rate*: ${this.stats['nbc-snl-node']} requests/sec \n`;
 
     return textValue;
   }
@@ -75,41 +70,16 @@ class SlackConfig extends configuration {
    * @return {Promise}
    *  Returns the promise object.
    */
-  getMLAppServerStats(appServers, cpuMemUsage) {
-    const promises = [];
-
-    appServers.forEach(appServer => promises.push(
-        this.get(`manage/v2/servers/${appServer}?view=status&group-id=${this.groupId}&format=${config.format}`)
-            .then((serverInfo) => {
-              const requestRate =
-              serverInfo['server-status']['status-properties']['total-request-rate'].value;
-
-              this.appServerRequestRate[appServer] = requestRate;
-
-              return this.appServerRequestRate;
-            })
-          .catch(e => Promise.reject(`Error in fetching the appserver statistics
-                                      for ${appServer} with ${e}`))
-      ));
-
-    this.appServerRequestRate.usage = cpuMemUsage;
-    return Promise.all(promises);
-  }
-
-  /**
-   * Function to format the time to UTC timezone.
-   *
-   * @return {Date}
-   *  Returns the UTC date time.
-   */
-  utcDateTime() {
-    const today = new Date();
-    /** Adding the :00Z because the time format of the stats entry in marklogic
-     *  is something like 2017-06-14T12:30:00Z. So we need to always have the
-     *  seconds value to be considered with '00' and which should end with 'Z'.
-     */
-    const dateTime = moment.utc(today).format('YYYY-MM-DDTHH:mm').concat(':00Z');
-    return dateTime;
+  getMLAppServerStats(appServers) {
+    return Promise.all(appServers.map((appServer) => {
+      return this.get(`manage/LATEST/servers/${appServer}?view=status&group-id=${this.groupId}&format=${config.format}`)
+                 .then((serverObj) => {
+                   const serverPath = `server-status.status-properties.total-request-rate.value`;
+                   this.stats[appServer] = _.get(serverObj, serverPath, 0);
+                 })
+                 .catch(e => Promise.reject(`Error in fetching the appserver statistics
+                                             for ${appServer} with ${e}`))
+    }));
   }
 
   /**
@@ -119,82 +89,33 @@ class SlackConfig extends configuration {
    *  Returns the promise object.
    */
   getCPUMemoryStats() {
-    return this.get(`manage/v2/hosts?view=metrics&format=${config.format}&period=${this.period}`)
+    const utcDate = new Date();
+    utcDate.setTime(utcDate.getTime() - 60000);
+
+    return this.get(`manage/LATEST/hosts?view=metrics&format=${config.format}&period=${this.period}&start=${utcDate.toISOString()}`)
                .then((res) => {
-                 const response = {};
+                 const metricsPath = 'host-metrics-list.metrics-relations.host-metrics-list.metrics';
 
-                 const metricsArray =
-                 res['host-metrics-list']['metrics-relations']['host-metrics-list'].metrics;
+                 const currentPSTDateTime = moment(new Date()).tz('America/Los_Angeles').locale('en').format('YYYY-MM-DD hh:mm A');
+                 this.stats.displayTime = currentPSTDateTime;
 
-                  // Fetching the CPU % utilized for the User.
-                 const cpuUserStats = metricsArray.filter(metric =>
-                                      Object.keys(metric)[0] === 'total-cpu-stat-user')[0];
-
-                 // Fetching the memory RSS statistics.
-                 const memoryRSSStats = metricsArray.filter(metric =>
-                                        Object.keys(metric)[0] === 'memory-process-rss')[0];
-
-                 // Finding all the entries the % of CPU utilized.
-                 const CPUUserDates = cpuUserStats['total-cpu-stat-user'].summary.data.entry;
-
-                 // Finding all the entries of amount of memory utilized.
-                 const memoryRSSDates = memoryRSSStats['memory-process-rss'].summary.data.entry;
-
-                 // Converting to UTC timezone because the required Stats ML
-                 // server is running in the UTC time zone.
-                 const currentUTCDateTime = this.utcDateTime();
-
-                 // Converting to PST timezone because the message we log in the
-                 //  slack channel to represented in PST timezone.
-                 const currentPSTDateTime =
-                 moment(new Date()).tz('America/Los_Angeles').format('YYYY-MM-DDTHH:mm:ss')
-                                   .concat('Z');
-
-                 // Finding the % of CPU utilized for specific time.
-                 const cpuValue = CPUUserDates.length === 0 ?
-                 CPUUserDates.length : CPUUserDates.filter(date => date.dt === currentUTCDateTime)[0];
-
-                 // Finding the amount of memory utilized for specific time.
-                 const memValue = memoryRSSDates.length === 0 ?
-                 memoryRSSDates.length : memoryRSSDates.filter(date => date.dt === currentUTCDateTime)[0];
-
-                 response.pstTime = currentPSTDateTime;
-
-                 response.cpuUsage =
-                 cpuValue === undefined ? 0 : Math.round(cpuValue.value * 100) / 100;
-
-                 response.memUsage =
-                 memValue === undefined ? 0 : Math.round(memValue.value * 100) / 100;
-
-                 return response;
+                 // Fetching the CPU and Memory Statistics
+                 return _.get(res, metricsPath, [])
+                         .reduce((idleCpu, metric) => {
+                           if (metric['total-cpu-stat-user']) {
+                        // Setting the cpu stat value to stats instance variable
+                             this.stats.cpuUserUsage =
+                             (100 - metric['total-cpu-stat-user'].summary.data.entry[0].value).toFixed(2);
+                           }
+                           else if (metric['memory-process-rss']) {
+                       // Setting the memory stat value to stats instance variable
+                             this.stats.memUsage =
+                             (metric['memory-process-rss'].summary.data.entry[0].value / 1000).toFixed(2);
+                           }
+                           return idleCpu;
+                         }, 0);
                })
               .catch(e => Promise.reject(`Error in fetching the cpu and memory statistics: ${e}`));
-  }
-
-  /**
-   * Function to POST the Marklogic statistics to Slack Channel.
-   *
-   * @return {Promise}
-   *  Returns the Promise Object.
-   */
-  postMLStats() {
-    const content = this.getfinalStats();
-
-    const promiseObj = new Promise((resolve, reject) => {
-      this.slack.webhook({
-        channel: config.get('channelName'),
-        username: config.get('groupName'),
-        text: content,
-      }, (err, res) => {
-        if (err) {
-          reject(err);
-        }
-        else {
-          resolve(res);
-        }
-      });
-    });
-    return promiseObj;
   }
 }
 
