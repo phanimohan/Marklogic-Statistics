@@ -14,7 +14,7 @@ The application will retrieve the below resource statistics information:
 ### Setting it up
 * Clone repo and do a `npm install`
 * Execute the following command -
-  `node ./scripts/generateLocalConfig.js prod` to generate  _local.json_.
+  `node ./scripts/generateLocalConfig.js <env>` to generate  _local.json_.
 
 How to run the application when using it as lambda function:
 
@@ -25,9 +25,9 @@ Note:
 
 
 ## Running the application locally
-* Run the command "node ./node/generateLocalConfig.js <env>" which will generate the local.json
+* Run the command `node ./node/generateLocalConfig.js <env>` which will generate the local.json
 * Please add the environment specific password credential to the local.json
     Ex:   "auth": {
-            "password": <value must be given>
+            "password": <env specific password value>
           }
-* Run the command "node index.js logMLStatistics"
+* Run the command `node index.js logMLStatistics`
