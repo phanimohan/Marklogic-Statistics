@@ -78,21 +78,23 @@ class SlackConfig extends configuration {
                    this.stats[appServer] = _.get(serverObj, serverPath, 0);
                  })
                  .catch(e => Promise.reject(`Error in fetching the appserver statistics
-                                             for ${appServer} with ${e}`))
+                                             for ${appServer} with ${e}`));
     }));
   }
 
   /**
    * Function to fetch the CPU and Memory statistics information.
    *
+   * @param {date} requestedDateTime
+   * The dateTime value to fetch the ML statistics.
+   *
    * @return {Promise}
    *  Returns the promise object.
    */
-  getCPUMemoryStats() {
-    const utcDate = new Date();
-    utcDate.setTime(utcDate.getTime() - 60000);
+  getCPUMemoryStats(requestedDateTime) {
+    requestedDateTime.setTime(requestedDateTime.getTime() - 60000);
 
-    return this.get(`manage/LATEST/hosts?view=metrics&format=${config.format}&period=${this.period}&start=${utcDate.toISOString()}`)
+    return this.get(`manage/LATEST/hosts?view=metrics&format=${config.format}&period=${this.period}&start=${requestedDateTime.toISOString()}`)
                .then((res) => {
                  const metricsPath = 'host-metrics-list.metrics-relations.host-metrics-list.metrics';
 
@@ -102,12 +104,12 @@ class SlackConfig extends configuration {
                  // Fetching the CPU and Memory Statistics
                  return _.get(res, metricsPath, [])
                          .reduce((idleCpu, metric) => {
-                           if (metric['total-cpu-stat-user']) {
+                           if (metric['total-cpu-stat-idle']) {
                         // Setting the cpu stat value to stats instance variable
                              this.stats.cpuUserUsage =
-                             (100 - metric['total-cpu-stat-user'].summary.data.entry[0].value).toFixed(2);
+                             (100 - metric['total-cpu-stat-idle'].summary.data.entry[0].value).toFixed(2);
                            }
-                           else if (metric['memory-process-rss']) {
+                           if (metric['memory-process-rss']) {
                        // Setting the memory stat value to stats instance variable
                              this.stats.memUsage =
                              (metric['memory-process-rss'].summary.data.entry[0].value / 1000).toFixed(2);

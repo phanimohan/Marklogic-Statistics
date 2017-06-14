@@ -15,11 +15,14 @@ class SlackApp {
    /**
     * Function to instantiate all the marklogic statistics information.
     *
+    * @param {date}
+    * Requested dateTime value to fetch the statistics information.
+    *
     * @return {Promise}
     *  Returns the promise object.
     */
-  mlStatistics() {
-    return slackInst.getCPUMemoryStats()
+  mlStatistics(requestDateTime) {
+    return slackInst.getCPUMemoryStats(requestDateTime)
                     .then(() => slackInst.getMLAppServerStats(appServers))
                     .then(() => postMLStats(slackInst.getFinalStats()))
                     .catch(e => Promise.reject(`Error in ML statistics Code ${e}`));

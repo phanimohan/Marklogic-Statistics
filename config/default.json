@@ -4,8 +4,8 @@
   "timeout": 50000,
   "host": "",
   "auth": {
-    "user": "",
-    "pass": "",
+    "user": null,
+    "password": null,
     "sendImmediately": false
   },
   "headers": {

@@ -1,18 +1,13 @@
+/* eslint-disable no-console */
 'use strict';
+const functions = require('./handler');
 
-const SlackApp = require('./app/slackApp');
-
-exports.handler = function (event, context) {
-  console.log('Marklogic Statistics has triggered::: =>');
-
-  console.log('Stats Input Info:', JSON.stringify(event, null, 2));
-
-  const trigger = event.trigger;
-
-  if (trigger) {
-    new SlackApp().mlStatistics();
-  }
-  else {
-    console.log('Please enable the trigger to post stats to Slack Channel::: =>');
-  }
-};
+if (process.argv[2] && functions[process.argv[2]]) {
+  console.log(`Start: ${new Date()}`);
+  functions[process.argv[2]](null, null, () => {
+    console.log(`End: ${new Date()}`);
+  });
+}
+else {
+  console.log(`Please provide a valid function name as logMLStatistics`);
+}

@@ -1,0 +1,29 @@
+sudo: false
+language: node_js
+node_js:
+  - "6.10"
+env:
+  - CXX=g++-4.8
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-4.8
+cache:
+  directories:
+    - node_modules
+before_script:
+  - npm prune
+script:
+  - ./.travis-script.sh
+after_success:
+  - npm run semantic-release
+  - ./.travis-after-script.sh
+branches:
+  except:
+      - /^v\d+\.\d+\.\d+$/
+notifications:
+  email: false
+  slack:
+    secure: JkNhOovxCon2nVtzevqWx0VzvOlvhFolUsf/wGGsi5+SChgTcNMv2pSrcaeNeRMfREz9E+RV0sxjkP2Xj2kNdCd3v/XFxHbxVEBOq/EBvhl+2I2OF2nnvf1I+MyA4KH+UoeGa3HyxW2u3e8JjokiwDM9cPD9WfY8povH7LJ8WoJiHX+v3zz6EDzKje7QoHII9ndi0kvSKlhzwbXSjVFm9MV87bZXJAI4hIMi7XY0sUEDjae3bMo9imz1wVO1mI9MyH+Cuz3s12cH7LshqrDQozDV6r1kJUicqyfXbxoVKfU4lrlRcJxATrqvnDKHiPO9kl1DES0B2QnEBB8rfe3fXPQTbZQ9OMEit9czHIK8U2TYeKjsGaQPekWbDIWvQ4XDiijUDudw3etJUDugwMPGrdnpz4j+ZW8xwoB8IkYuOdbefnJxcMcTW1jr1XSBH5JXL5It9h9vp7xtBH9CqumDWUcV/AtRCH55H/CxHpK9o8TP/bx/+aEzYBMfPaSoSHaWSR4rJsrqL7HBanumWZtiRqfWONdvqBesQZHJiePyz2nokvlh8e8NQjXrYAw2hMD4abpI/OboheoqpiFcU4ByHv1HTInzAFQEUGFV+Tqre0pvlzbWdeim8MM/w/J4sKrfJsHUtIHRX6Od2hAjao0DnY2TRzaCiZZNI0DYlfu4f7g=

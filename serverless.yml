@@ -1,0 +1,26 @@
+service: ml-statistics
+provider:
+  name: aws
+  runtime: nodejs6.10
+  custom:
+    variables:
+      local: ${file(./config/local.json)}
+      dev: ${file(./config/dev.json)}
+      acc: ${file(./config/acc.json)}
+      stage: ${file(./config/stage.json)}
+      prod: ${file(./config/prod.json)}
+  package:
+    include:
+      - config
+      - node_modules
+      - app
+      - handler.js
+      - package.json
+ functions:
+   logMLStatistics:
+     handler: handler.logMLStatistics
+     events:
+       - schedule:
+            rate: rate(60 minutes)
+            enabled: false
+     timeout: 300
