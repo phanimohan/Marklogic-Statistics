@@ -1,6 +1,3 @@
 {
-  "host": "dev-ml.snlml.com",
-  "auth": {
-    "user": "devml"
-  }
+  "host": "dev-ml.snlml.com"
 }

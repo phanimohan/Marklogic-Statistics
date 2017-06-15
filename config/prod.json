@@ -1,6 +1,3 @@
 {
-  "host": "prod-ml.snlml.com",
-  "auth": {
-    "user": "prodml"
-  }
+  "host": "prod-ml.snlml.com"
 }

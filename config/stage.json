@@ -1,6 +1,3 @@
 {
-  "host": "stage-ml.snlml.com",
-  "auth": {
-    "user": "stageml"
-  }
+  "host": "stage-ml.snlml.com"
 }
