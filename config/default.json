@@ -4,7 +4,7 @@
   "timeout": 50000,
   "host": "",
   "auth": {
-    "user": "nbc_app_user",
+    "user": "nbc_data_admin",
     "password": null,
     "sendImmediately": false
   },
