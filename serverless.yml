@@ -22,5 +22,5 @@ provider:
      events:
        - schedule:
             rate: rate(60 minutes)
-            enabled: false
+            enabled: true
      timeout: 300
