@@ -53,7 +53,8 @@ class SlackConfig extends configuration {
     `*CPU - User*: ${this.stats.cpuUserUsage} %\n` +
     `*Memory - RSS*: ${this.stats.memUsage} GB\n` +
     `*AppServer (nbc-park) request Rate*: ${this.stats['nbc-park']} requests/sec \n` +
-    `*AppServer (nbc-snl-node) request Rate*: ${this.stats['nbc-snl-node']} requests/sec \n`;
+    `*AppServer (nbc-snl-node) request Rate*: ${this.stats['nbc-snl-node']} requests/sec \n` +
+    `*AppServer (nbc-api) request Rate*: ${this.stats['nbc-api']} requests/sec \n`;
 
     return textValue;
   }
@@ -63,23 +64,31 @@ class SlackConfig extends configuration {
    *
    * @param {array} appServers
    *   The list of appserver names.
-   * @param {Object} cpuMemUsage
-   *   The spu and memory utilization information.
+   * @param {date} requestedDateTime
+   * The dateTime value to fetch the ML statistics.
    *
    *
    * @return {Promise}
    *  Returns the promise object.
    */
-  getMLAppServerStats(appServers) {
-    return Promise.all(appServers.map((appServer) => {
-      return this.get(`manage/LATEST/servers/${appServer}?view=status&group-id=${this.groupId}&format=${config.format}`)
+  getMLAppServerStats(appServers, requestedDateTime) {
+    const startDateTime = new Date(requestedDateTime.getTime() - 60000);
+
+    return Promise.all(appServers.map(appServer =>
+             this.get(`manage/LATEST/servers?view=metrics&period=${this.period}&start=${startDateTime.toISOString()}&end=${requestedDateTime.toISOString()}&server=${appServer}&server-metrics=request-rate&format=${config.format}`)
                  .then((serverObj) => {
-                   const serverPath = `server-status.status-properties.total-request-rate.value`;
-                   this.stats[appServer] = _.get(serverObj, serverPath, 0);
+                   const serverPath = `server-metrics-list.metrics-relations.server-metrics-list.metrics`;
+                   return _.get(serverObj, serverPath, []).reduce((previous, current) => {
+                     const requestRateObj = _.get(current, 'request-rate', {});
+                     const requestRatePath = `summary.data.entry`;
+
+                     const requestRate = _.get(requestRateObj, requestRatePath, []).map(dateValue => _.get(dateValue, 'value', 0).toFixed(2));
+                     this.stats[appServer] = requestRate;
+                     return previous;
+                   }, {});
                  })
-                 .catch(e => Promise.reject(`Error in fetching the appserver statistics
-                                             for ${appServer} with ${e}`));
-    }));
+                .catch(e => Promise.reject(`Error in fetching the appserver statistics
+                                             for ${appServer} with ${e}`))));
   }
 
   /**
