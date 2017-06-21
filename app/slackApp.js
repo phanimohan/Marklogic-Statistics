@@ -23,7 +23,7 @@ class SlackApp {
     */
   mlStatistics(requestDateTime) {
     return slackInst.getCPUMemoryStats(requestDateTime)
-                    .then(() => slackInst.getMLAppServerStats(appServers))
+                    .then(() => slackInst.getMLAppServerStats(appServers, requestDateTime))
                     .then(() => postMLStats(slackInst.getFinalStats()))
                     .catch(e => Promise.reject(`Error in ML statistics Code ${e}`));
   }
