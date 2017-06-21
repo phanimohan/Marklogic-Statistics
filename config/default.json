@@ -17,5 +17,5 @@
   "groupId": "Default",
   "period": "raw",
   "webhook": "https://hooks.slack.com/services/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",
-  "appServers": ["nbc-park", "nbc-snl-node"]
+  "appServers": ["nbc-park", "nbc-snl-node", "nbc-api"]
 }
